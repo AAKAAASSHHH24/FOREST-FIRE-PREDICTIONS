@@ -2,3 +2,5 @@ Flask
 pandas
 numpy
 sklearn
+pymongo
+flask_cors

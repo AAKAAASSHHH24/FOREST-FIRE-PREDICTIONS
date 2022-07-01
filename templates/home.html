@@ -1,43 +1,31 @@
-<!DOCTYPE html>
-<html >
-<!--From https://codepen.io/frytyler/pen/EGdtg-->
-<head>
-  <meta charset="UTF-8">
-  <title>ML API</title>
-  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
-<link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
-<link href='https://fonts.googleapis.com/css?family=Hind:300' rel='stylesheet' type='text/css'>
-<link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<hr>
+<div align = "center" style="font-weight:lighter;">
+  <p style="font-size: 35px; font-weight: bolder;"><b>Alerigan Forest Fire Prediction</b></p>
+  <b><hr></b>
+  <h3><b>Select Single/Bulk Input</b></h3>
+</div>
 
-  
-</head>
+<div style="margin-top: 2%;">
+  <form action="/prediction_choice" method="POST">
 
-<body>
- <div class="login">
-	<h1>Forest Fire Prediction</h1>
-
-     <!-- Main Input For Receiving Query to our ML -->
-    <form action="{{ url_for('predict')}}"method="post">
-      <input type="text" name="Relative Humidity" placeholder="RH" required="required" /><br>
-    	<input type="text" name="Wind Speed" placeholder="Ws" required="required" /><br>
-        <input type="text" name="Rain" placeholder="Rain" required="required" /><br>
-        <input type="text" name="Fine Fuel Moisture Code" placeholder="FFMC" required="required" /><br>
-        <input type="text" name="Duff Moisture Code" placeholder="DMC" required="required" /><br>
-        <input type="text" name="DroughtCode" placeholder="DC" required="required" /><br>
-        <input type="text" name="Initial Spread Index" placeholder="ISI" required="required" /><br>
-        <input type="text" name="Fire Weather Index" placeholder="FWI" required="required" /><br>
-
-       
-
-        <button type="submit" class="btn btn-primary btn-block btn-large">Predict</button>
-    </form>
-
-   <br>
-   <br>
-  
-   
- </div>
- {{prediction_text}}
-
-</body>
-</html>
+    <table align="center">
+      <tr>
+        <td>
+          <select id='choice' name='choice'>
+            <option value="single">Single Prediction</option>
+            <option value="bulk">Bulk Prediction</option>
+          </select>
+        </td>
+        <tr>
+            <td>
+            <input type="submit" value="Proceed">
+            </td>
+        </tr>
+      </tr>
+    </table>
+  </form>
+</div>
+{% endblock content %}

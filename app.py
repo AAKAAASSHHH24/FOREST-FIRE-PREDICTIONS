@@ -1,41 +1,117 @@
+# importing the necessary dependencies
+from flask import Flask, render_template, request
+from flask_cors import cross_origin
 import pickle
-from flask import Flask,request,app,jsonify,url_for,render_template
-import numpy as np
+import sklearn
+import pymongo
 import pandas as pd
+import logging
 
+## Creating logging config
 
-app=Flask(__name__)
-model=pickle.load(open('regression_model.pkl','rb'))
+logging.basicConfig(filename='forest_fire_log.log',
+                    filemode='a',
+                    level = logging.INFO,
+                    format='%(asctime)s %(levelname)s-%(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S'
+                    )
 
-@app.route('/')
-def home():
-    #return 'Hello World'
-    return render_template('home.html')
+## Creating Logger Object
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
-@app.route('/predict_api',methods=['POST'])
-def predict_api():
+from bulk_prediction import Bulk_Predictor
 
-    data=request.json['data']
-    print(data)
-    new_data=[list(data.values())]
-    output=model.predict(new_data)[0]
-    return jsonify(output)
+app = Flask(__name__) # initializing a flask app
 
-@app.route('/predict',methods=['POST'])
-def predict():
+models = ['classification_model.pkl', 'regression_model.pkl']
+classification_model = pickle.load(open(models[0], 'rb')) # loading the model file from the storage
+regression_model = pickle.load(open(models[1], 'rb')) # loading the model file from the storage
 
-    data=[float(x) for x in request.form.values()]
-    final_features = [np.array(data)]
-    print(data)
+@app.route('/',methods=['GET', 'POST'])  # route to display the home page
+@cross_origin()
+def homePage():
+    logger.info('Rendering Homepage')
+    return render_template("home.html")
+
+@app.route('/prediction_choice',methods=['GET', 'POST'])  # route to display the home page
+@cross_origin()
+def prediction_choice():
+    try:
+        if request.method == 'POST':
+            choice = request.form['choice']
+            if choice == 'single':
+                return render_template('single_prediction.html', title = 'Single Prediction')
+            else:
+                return render_template('bulk_prediction.html', title = 'Bulk Prediction')
+        logger.info('Rendering prediction choice page')
+    except:
+        logger.error('Error while rendering prediction page')
+
+@app.route('/single_prediction',methods=['POST','GET']) # route to show the predictions in a web UI
+@cross_origin()
+def single_prediction():
+    if request.method == 'POST':
+        try:
+            Temperature = int(request.form['Temperature'])
+            day=int(request.form['day'])
+            month=int(request.form['month'])
+            year=int(request.form['year'])
+            RH=float(request.form['RH'])
+            Ws = float(request.form['Ws'])
+            Rain = float(request.form['Rain'])
+            FFMC = float(request.form['FFMC'])
+            DMC = float(request.form['DMC'])
+            DC = float(request.form['DC'])
+            ISI = float(request.form['ISI'])
+            BUI = float(request.form['BUI'])
+            FWI = float(request.form['FWI'])
+            logger.info('Fetching data from web')
+            prediction_temp=regression_model.predict([[RH, Ws, Rain, FFMC, DMC, DC, ISI, FWI]])
+            prediction_classes=classification_model.predict([[Temperature, RH, Ws, Rain, FFMC, DMC, DC, ISI,FWI]])
+            logger.info('Prediction Done!')
+            if prediction_classes[0] == 0:
+                prediction_classes = 'Not Fire'
+            else:
+                prediction_classes = 'Fire'
+
+            results = [[day, month, year, RH, Ws, Rain, FFMC, DMC, DC, ISI, BUI, FWI, prediction_temp[0], prediction_classes]]
     
-    output=model.predict(final_features)[0]
-    print(output)
-    #output = round(prediction[0], 2)
-    return render_template('home.html', prediction_text="TEMPERATURE:  {}".format(output))
+            return render_template('results.html', results=results)
+        except Exception as e:
+            logger.error('Something went wrong during single prediction')
+            return 'something is wrong'
+            
+    else:
+        return render_template('home.html')
+
+@app.route('/bulk_prediction',methods=['POST','GET']) # route to show the predictions in a web UI
+@cross_origin()
+def bulk_prediction():
+    if request.method == 'POST':
+        try:
+            client_url = request.form['client url']
+            db = request.form['database name']
+            collection = request.form['collection name']
+            logger.info('Fetching mongodb connection data')
+
+            bulk_predictor = Bulk_Predictor(client_url, db, collection)
+            logger.info('Connection with mongodb established')
+            df = bulk_predictor.predictAndFetchRecord()
+            logger.info('Prediction for bulk test done')
+
+            results = []
+            for i in range(len(df)):
+                results.append(list(df.iloc[i]))
+
+            return render_template('results.html', results=results)
+
+        except Exception as e:
+            logger.error('Something went wrong during bulk prediction')
+            return 'something is wrong'
+    else:
+        return render_template('home.html')
 
 
-
-if __name__=="__main__":
-    app.run(debug=True)
-
-
+if __name__ == "__main__":
+	app.run(debug=True) # running the app
