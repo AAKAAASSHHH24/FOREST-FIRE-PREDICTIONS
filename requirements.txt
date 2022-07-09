@@ -4,3 +4,4 @@ numpy
 sklearn
 pymongo
 flask_cors
+gunicorn

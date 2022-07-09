@@ -14,26 +14,13 @@
      
         <style type="text/css">
          table      {border:solid 5px black;width:80%;margin-left:auto; margin-right:auto;}
-         table th   {border:solid 2px black;background-color:#FEB9B9;color:black;text-align:center;font-weight:bold;}
+         table th   {border:solid 2px black;background-color:#9d0404;color:rgb(20, 252, 4);text-align:center;font-weight:bold;}
          table td   {border:solid 2px black;color:black;text-align:center;}
         </style>
      
         <table>
            <tr>
-              <th>Day</th>
-              <th>Month</th>
-              <th>Year</th>
-              <th>RH</th>
-              <th>Ws</th>
-              <th>Rain</th>
-              <th>FFMC</th>
-              <th>DMC</th>
-              <th>DC</th>
-              <th>ISI</th>
-              <th>BUI</th>
-              <th>FWI</th>
-              <th>Prediction Temperature</th>
-              <th>Prediction Classes</th>
+              <th>Prediction Temperature/Forest Fire</th>
            </tr>
 <!--
                   {% for result in results %}
@@ -45,20 +32,7 @@
 -->
       {% for result in results %}
             <tr>
-                <td>{{result[0]}}</td>
-                <td>{{result[1]}}</td>
-                <td>{{result[2]}}</td>
-                <td>{{result[3]}}</td>
-                <td>{{result[4]}}</td>
-                <td>{{result[5]}}</td>
-                <td>{{result[6]}}</td>
-                <td>{{result[7]}}</td>
-                <td>{{result[8]}}</td>
-                <td>{{result[9]}}</td>
-                <td>{{result[10]}}</td>
-                <td>{{result[11]}}</td>
-                <td>{{result[12]}}</td>
-                <td>{{result[13]}}</td>      
+                <td>{{result[0]}}</td>   
             </tr>
       {% endfor %}
         </table>

@@ -54,9 +54,9 @@ def single_prediction():
     if request.method == 'POST':
         try:
             Temperature = int(request.form['Temperature'])
-            day=int(request.form['day'])
-            month=int(request.form['month'])
-            year=int(request.form['year'])
+            #day=int(request.form['day'])
+            #month=int(request.form['month'])
+            #year=int(request.form['year'])
             RH=float(request.form['RH'])
             Ws = float(request.form['Ws'])
             Rain = float(request.form['Rain'])
@@ -64,20 +64,23 @@ def single_prediction():
             DMC = float(request.form['DMC'])
             DC = float(request.form['DC'])
             ISI = float(request.form['ISI'])
-            BUI = float(request.form['BUI'])
+            #BUI = float(request.form['BUI'])
             FWI = float(request.form['FWI'])
             logger.info('Fetching data from web')
-            prediction_temp=regression_model.predict([[RH, Ws, Rain, FFMC, DMC, DC, ISI, FWI]])
+        
             prediction_classes=classification_model.predict([[Temperature, RH, Ws, Rain, FFMC, DMC, DC, ISI,FWI]])
-            logger.info('Prediction Done!')
             if prediction_classes[0] == 0:
                 prediction_classes = 'Not Fire'
             else:
                 prediction_classes = 'Fire'
-
-            results = [[day, month, year, RH, Ws, Rain, FFMC, DMC, DC, ISI, BUI, FWI, prediction_temp[0], prediction_classes]]
+       
+            prediction_temp=regression_model.predict([[RH, Ws, Rain, FFMC, DMC, DC, ISI, FWI]])
+            results = [[prediction_classes], prediction_temp[0]]
+            
+            logger.info('Prediction Done!')
+            
     
-            return render_template('results.html', results=results)
+            return render_template('single_result.html', results=results)
         except Exception as e:
             logger.error('Something went wrong during single prediction')
             return 'something is wrong'
@@ -97,15 +100,20 @@ def bulk_prediction():
 
             bulk_predictor = Bulk_Predictor(client_url, db, collection)
             logger.info('Connection with mongodb established')
-            df = bulk_predictor.predictAndFetchRecord()
+            
+            if collection == 'regression':
+                df = bulk_predictor.bulk_regression()
+            else:
+                df = bulk_predictor.bulk_classification()
+            
             logger.info('Prediction for bulk test done')
 
             results = []
             for i in range(len(df)):
-                results.append(list(df.iloc[i]))
-
-            return render_template('results.html', results=results)
-
+                results.append(list(df.iloc[i])[-1])
+            l= [[results[i]] for i in range(len(results))]
+            return render_template('results.html', results=l)
+        
         except Exception as e:
             logger.error('Something went wrong during bulk prediction')
             return 'something is wrong'
